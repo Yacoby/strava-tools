@@ -13,6 +13,7 @@ import ToGeoJson from 'togeojson';
 import togpx from 'togpx';
 
 import './index.html'
+import 'bootstrap/dist/css/bootstrap.css';
 
 class FileUpload extends React.Component {
   constructor(props) {
@@ -64,6 +65,7 @@ class App extends React.Component {
       startingBounds: [[49, -123.310547],[50,-120.673828]],
     }
   }
+
   handleUpload(gpxData) {
     const geoJson = ToGeoJson.gpx((new DOMParser()).parseFromString(gpxData, 'text/xml'));
     const {maxLat, minLat, maxLng, minLng} = geolib.getBounds(geoutil.toPoints(geoJson));
@@ -91,7 +93,6 @@ class App extends React.Component {
     return (
       <div>
         <FileUpload onDataLoad={this.handleUpload}/> | <a onClick={this.downloadGpx}>Download GPX</a>
-        <hr />
         <EditableGeoMap geoJson={this.state.geoJson} onDelete={this.onDelete} bounds={this.state.startingBounds}/>
       </div>
     )
