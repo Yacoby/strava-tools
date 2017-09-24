@@ -24,6 +24,10 @@ const editableMap = (Map) => {
     }
 
     onClick(evt) {
+      if (evt.originalEvent.which !== 1) {
+        return;
+      }
+
       if (this.state.currentLineStart) {
         const newCropLines = this.state.cropLines.slice();
         const cropLine = [this.state.currentLineStart, evt.latlng];
@@ -34,8 +38,6 @@ const editableMap = (Map) => {
           cropLines: newCropLines,
           currentIsCropEnd: !this.state.currentIsCropEnd,
         });
-
-        this.props.onCropLinesChange(newCropLines);
       } else {
         this.setState({
           currentLineStart: evt.latlng,
@@ -74,7 +76,7 @@ const editableMap = (Map) => {
             </p>
 
             <button type="button" className="btn btn-outline-danger" onClick={this.crop}>Crop GPX</button>
-            <button type="button" className="btn btn-outline-primary" onClick={this.removeCropLines}>Remove existing lines</button>
+            <button type="button" className="btn btn-outline-primary" onClick={this.removeCropLines}>Remove crop lines</button>
           </div>
 
           <div className="col">
