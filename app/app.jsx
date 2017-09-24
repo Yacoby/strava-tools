@@ -12,6 +12,7 @@ import geoutil from './geo-util'
 import ToGeoJson from 'togeojson';
 import togpx from 'togpx';
 
+import './index.html'
 
 class FileUpload extends React.Component {
   constructor(props) {
