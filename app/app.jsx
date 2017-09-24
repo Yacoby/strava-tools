@@ -76,7 +76,7 @@ class App extends React.Component {
 
   onDelete(latlng, dist) {
     const newGeoJson = geoutil.deletePointsWhere(this.state.geoJson, (context, coord) => {
-      return context.previous && geolib.getDistance(coord, latlng) < dist
+      return geolib.getDistance(coord, latlng) < dist
     });
     this.setState({geoJson: newGeoJson});
   }
@@ -84,7 +84,6 @@ class App extends React.Component {
   downloadGpx() {
     const gpx = togpx(geoutil.concatFeatures(this.state.geoJson));
     const blob = new Blob([gpx], {type: "text/plain;charset=utf-8"});
-    debugger;
     saveAs(blob, "trimmed.gpx");
   }
 
