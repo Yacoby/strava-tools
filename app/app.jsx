@@ -55,9 +55,8 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.handleUpload = this.handleUpload.bind(this);
-    this.onDeletePressed = this.onDeletePressed.bind(this);
-    this.onCropLinesChange = this.onCropLinesChange.bind(this);
-    this.downloadGpx= this.downloadGpx.bind(this);
+    this.onCropPressed = this.onCropPressed.bind(this);
+    this.downloadGpx = this.downloadGpx.bind(this);
 
     this.state = {
       geoJson: {
@@ -78,9 +77,7 @@ class App extends React.Component {
     });
   }
 
-  onDeletePressed() {
-    const cropLines = this.state.cropLines
-
+  onCropPressed(cropLines) {
     let isDeleting = false;
     const newGeoJson = geoutil.deletePointsWhere(this.state.geoJson, (context, coord) => {
       if (!context.previous) {
@@ -115,8 +112,7 @@ class App extends React.Component {
     return (
       <div>
         <FileUpload onDataLoad={this.handleUpload}/> | <a onClick={this.downloadGpx}>Download GPX</a>
-        <a onClick={this.onDeletePressed}> Delete </a>
-        <EditableGeoMap geoJson={this.state.geoJson} onCropLinesChange={this.onCropLinesChange} bounds={this.state.startingBounds}/>
+        <EditableGeoMap geoJson={this.state.geoJson} onCropPressed={this.onCropPressed} bounds={this.state.startingBounds}/>
       </div>
     )
   }
