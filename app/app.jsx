@@ -7,6 +7,7 @@ import FileReaderInput from 'react-file-reader-input';
 
 import EditableGeoMap  from './components/EditableMap';
 
+import * as turf from '@turf/turf'
 import geolib from 'geolib';
 import geoutil from './geo-util'
 import ToGeoJson from 'togeojson';
@@ -54,7 +55,8 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.handleUpload = this.handleUpload.bind(this);
-    this.onDelete = this.onDelete.bind(this);
+    this.onDeletePressed = this.onDeletePressed.bind(this);
+    this.onCropLinesChange = this.onCropLinesChange.bind(this);
     this.downloadGpx= this.downloadGpx.bind(this);
 
     this.state = {
@@ -76,11 +78,31 @@ class App extends React.Component {
     });
   }
 
-  onDelete(latlng, dist) {
+  onDeletePressed() {
+    const cropLines = this.state.cropLines
+
+    let isDeleting = false;
     const newGeoJson = geoutil.deletePointsWhere(this.state.geoJson, (context, coord) => {
-      return geolib.getDistance(coord, latlng) < dist
+      if (!context.previous) {
+        return isDeleting; // todo is this the correct behaviour?
+      }
+
+      const currentSegment = turf.lineString([context.previous.coord, coord].map((ll) => ll.slice(0, 2)));
+      const intersections = cropLines.filter((line) => {
+        const cropLineString = turf.lineString(line.map((ll) => [ll.lng, ll.lat]));
+        return turf.lineIntersect(cropLineString, currentSegment).features.length > 0;
+      });
+
+      if (intersections.length) {
+        isDeleting = !_.last(intersections).isCropLineEnd;
+      }
+      return isDeleting;
     });
     this.setState({geoJson: newGeoJson});
+  }
+
+  onCropLinesChange(cropLines) {
+    this.setState({cropLines});
   }
 
   downloadGpx() {
@@ -93,7 +115,8 @@ class App extends React.Component {
     return (
       <div>
         <FileUpload onDataLoad={this.handleUpload}/> | <a onClick={this.downloadGpx}>Download GPX</a>
-        <EditableGeoMap geoJson={this.state.geoJson} onDelete={this.onDelete} bounds={this.state.startingBounds}/>
+        <a onClick={this.onDeletePressed}> Delete </a>
+        <EditableGeoMap geoJson={this.state.geoJson} onCropLinesChange={this.onCropLinesChange} bounds={this.state.startingBounds}/>
       </div>
     )
   }

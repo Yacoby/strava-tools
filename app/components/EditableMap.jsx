@@ -1,5 +1,5 @@
 import React from 'react';
-import { GeoJSON, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { Polyline, GeoJSON, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import MapWithUpdatableProps from './MapWithUpdatableProps';
 import hash from 'object-hash'
 
@@ -11,62 +11,62 @@ const editableMap = (Map) => {
       super(props);
       this.state = {
         mousePos: {lat: 0, lng: 0},
-        isEditing: false,
-        editSize: 10,
+
+        cropLines: [],
+        currentLineStart: null,
+        currentIsCropEnd: false,
       }
 
       this.onMouseMove = this.onMouseMove.bind(this);
-      this.onMouseDown = this.onMouseDown.bind(this);
-      this.onMouseUp = this.onMouseUp.bind(this);
-      this.onZoomEnd = this.onZoomEnd.bind(this);
+      this.onClick = this.onClick.bind(this);
+    }
+
+    onClick(evt) {
+      if (this.state.currentLineStart) {
+        const newCropLines = this.state.cropLines.slice();
+        const cropLine = [this.state.currentLineStart, evt.latlng];
+        cropLine.isCropLineEnd = this.state.currentIsCropEnd;
+        newCropLines.push(cropLine)
+        this.setState({
+          currentLineStart: null,
+          cropLines: newCropLines,
+          currentIsCropEnd: !this.state.currentIsCropEnd,
+        });
+
+        this.props.onCropLinesChange(newCropLines);
+      } else {
+        this.setState({
+          currentLineStart: evt.latlng,
+        });
+      }
     }
 
     onMouseMove(evt) {
       this.setState({mousePos: evt.latlng});
-
-      if (this.state.isEditing) {
-        this.props.onDelete && this.props.onDelete(evt.latlng, this.state.editSize)
-      }
     }
 
-    onMouseDown(evt) {
-      if (evt.originalEvent.which === 3 || evt.originalEvent.ctrlKey ) {
-        this.setState({isEditing: true});
-        this.props.onDelete && this.props.onDelete(evt.latlng, this.state.editSize)
-      }
-    }
-
-    onMouseUp(evt) {
-      this.setState({isEditing: false})
-    }
-
-    onContextMenu(evt) {
-      return false;
-    }
-
-    onZoomEnd(evt) {
-      const mapSize = 1/Math.pow(2, evt.target._zoom);
-      this.setState({editSize: mapSize * 3276800})
+    getCropLineColor(isCropLineEnd) {
+      return isCropLineEnd ? 'red' : 'green';
     }
 
     render() {
-      const circleColour = this.state.isEditing ? 'red' : 'blue';
       return (
         <Map onMouseMove={this.onMouseMove}
-             onMouseDown={this.onMouseDown}
-             onMouseUp={this.onMouseUp}
+             onClick={this.onClick}
              dragging={!this.state.isEditing}
-             onContextMenu={this.onContextMenu}
-             onZoomEnd={this.onZoomEnd}
              {...this.props}>
-          <Circle center={this.state.mousePos} radius={this.state.editSize} color={circleColour} />
+
+           {this.state.cropLines.map((line) => (
+             <Polyline positions={line} color={this.getCropLineColor(line.isCropLineEnd)} />
+           ))}
+           {this.state.currentLineStart &&
+             <Polyline positions={[this.state.currentLineStart, this.state.mousePos]} color={this.getCropLineColor(this.state.currentIsCropEnd)} />
+           }
         </Map>
       );
     }
   }
 }
-
-
 
 
 class GeoJsonMap extends React.Component {
@@ -82,7 +82,7 @@ class GeoJsonMap extends React.Component {
 
   getStyle(feature, layer) {
     return {
-      color: '#006400',
+      color: 'blue',
       weight: 5,
       opacity: 0.65
     }
