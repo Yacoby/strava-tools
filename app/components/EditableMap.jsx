@@ -12,26 +12,30 @@ const editableMap = (Map) => {
       this.state = {
         mousePos: {lat: 0, lng: 0},
         isEditing: false,
+        editSize: 10,
       }
 
       this.onMouseMove = this.onMouseMove.bind(this);
       this.onMouseDown = this.onMouseDown.bind(this);
       this.onMouseUp = this.onMouseUp.bind(this);
+      this.onZoomEnd = this.onZoomEnd.bind(this);
     }
 
     onMouseMove(evt) {
       this.setState({mousePos: evt.latlng});
 
       if (this.state.isEditing) {
-        this.props.onDelete && this.props.onDelete(evt.latlng, 200)
+        this.props.onDelete && this.props.onDelete(evt.latlng, this.state.editSize)
       }
     }
 
     onMouseDown(evt) {
       if (evt.originalEvent.which === 3 || evt.originalEvent.ctrlKey ) {
         this.setState({isEditing: true});
+        this.props.onDelete && this.props.onDelete(evt.latlng, this.state.editSize)
       }
     }
+
     onMouseUp(evt) {
       this.setState({isEditing: false})
     }
@@ -40,15 +44,22 @@ const editableMap = (Map) => {
       return false;
     }
 
+    onZoomEnd(evt) {
+      const mapSize = 1/Math.pow(2, evt.target._zoom);
+      this.setState({editSize: mapSize * 3276800})
+    }
+
     render() {
+      const circleColour = this.state.isEditing ? 'red' : 'blue';
       return (
-        <Map onMouseMove={this.onMouseMove} 
-          onMouseDown={this.onMouseDown}
-          onMouseUp={this.onMouseUp}
-          dragging={!this.state.isEditing}
-          onContextMenu={this.onContextMenu}
-          {...this.props}>
-          <Circle center={this.state.mousePos} radius={200} />
+        <Map onMouseMove={this.onMouseMove}
+             onMouseDown={this.onMouseDown}
+             onMouseUp={this.onMouseUp}
+             dragging={!this.state.isEditing}
+             onContextMenu={this.onContextMenu}
+             onZoomEnd={this.onZoomEnd}
+             {...this.props}>
+          <Circle center={this.state.mousePos} radius={this.state.editSize} color={circleColour} />
         </Map>
       );
     }
