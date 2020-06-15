@@ -8,9 +8,9 @@ import FileReaderInput from 'react-file-reader-input';
 import EditableGeoMap  from './components/EditableMap';
 
 import * as turf from '@turf/turf'
-import geolib from 'geolib';
+import * as geolib from 'geolib';
 import geoutil from './geo-util'
-import ToGeoJson from 'togeojson';
+import toGeoJson from 'togeojson';
 import togpx from 'togpx';
 
 import './index.html'
@@ -68,7 +68,7 @@ class App extends React.Component {
   }
 
   handleUpload(gpxData) {
-    const geoJson = ToGeoJson.gpx((new DOMParser()).parseFromString(gpxData, 'text/xml'));
+    const geoJson = toGeoJson.gpx((new DOMParser()).parseFromString(gpxData, 'text/xml'));
     const {maxLat, minLat, maxLng, minLng} = geolib.getBounds(geoutil.toPoints(geoJson));
     const bounds = [[maxLat, maxLng], [minLat, minLng]];
     this.setState({
