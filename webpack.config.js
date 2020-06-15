@@ -4,21 +4,21 @@ module.exports = {
   entry: './app.jsx',
   output: {
     path: path.resolve('dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
   },
   resolve: {
-    extensions: ['.jsx', '.js']
+    extensions: ['.jsx', '.js'],
   },
   devServer: {
     contentBase: path.resolve(__dirname, 'app'),
   },
   module: {
     rules: [
-      {test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/},
-      {test: /\.jsx$/, loader: 'babel-loader', exclude: /node_modules/},
-      {test: /\.css$/, loader: "style-loader!css-loader"},
-      {test: /\.(html)$/, loader: "file-loader?name=[name].[ext]"},
-      {test: /\.(png|jpg)$/, loader: "file-loader?name=images/[name].[ext]"}
-    ]
-  }
-}
+      { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/ },
+      { test: /\.jsx$/, loader: 'babel-loader', exclude: /node_modules/ },
+      { test: /\.css$/, loader: 'style-loader!css-loader' },
+      { test: /\.(html)$/, loader: 'file-loader?name=[name].[ext]' },
+      { test: /\.(png|jpg)$/, loader: 'file-loader?name=images/[name].[ext]' },
+    ],
+  },
+};
