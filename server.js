@@ -1,11 +1,8 @@
-var path = require('path');
-var express = require('express');
+const express = require('express')
+const path = require('path')
+const PORT = process.env.PORT || 8080
 
-var app = express();
-
-app.use(express.static(path.join(__dirname, 'dist')));
-app.set('port', process.env.PORT || 8080);
-
-var server = app.listen(app.get('port'), function() {
-  console.log('listening on port ', server.address().port);
-});
+express()
+  .use(express.static(path.join(__dirname, 'dist')))
+  .set('port', process.env.PORT || 8080)
+  .listen(PORT, () => console.log(`listening on port ${PORT}`));
