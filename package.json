@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "start": "./node_modules/webpack/bin/webpack.js -p --progress && node server.js",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "heroku-postbuild": "webpack -p"
   },
   "dependencies": {
     "@turf/turf": "^5.1.6",
