@@ -1,13 +1,9 @@
 import React from 'react';
 import { render } from 'react-dom';
-import _ from 'lodash';
 
 import { saveAs } from 'file-saver';
 import FileReaderInput from 'react-file-reader-input';
 
-import EditableGeoMap from './components/EditableMap';
-
-import * as turf from '@turf/turf';
 import * as geolib from 'geolib';
 import geoutil from './geo-util';
 import toGeoJson from 'togeojson';
@@ -15,6 +11,19 @@ import togpx from 'togpx';
 
 import './index.html';
 import 'bootstrap/dist/css/bootstrap.css';
+import { Eraser } from './tools/eraser';
+import { Move } from './tools/move';
+import {
+  faArrowsAlt,
+  faEraser,
+  faFolderOpen,
+  faSave,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Navbar } from 'react-bootstrap';
 
 class FileUpload extends React.Component {
   constructor(props) {
@@ -35,11 +44,9 @@ class FileUpload extends React.Component {
 
   render() {
     return (
-      <form>
-        <FileReaderInput as='text' onChange={this.handleChange}>
-          <a>Upload a GPX File</a>
-        </FileReaderInput>
-      </form>
+      <FileReaderInput as='text' onChange={this.handleChange}>
+        <FontAwesomeIcon icon={faFolderOpen} />
+      </FileReaderInput>
     );
   }
 }
@@ -53,18 +60,69 @@ function splitIntoLines(geoObj) {
   });
 }
 
+class Map extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      geoJsonVersio: Math.random(),
+    };
+    this.onMapLoad = props.onMapLoad;
+  }
+
+  componentDidMount() {
+    this.map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      attribution:
+        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(this.map);
+    this.onMapLoad(this.map);
+
+    this.track = L.geoJSON(this.props.geoJson || [], {
+      style: function (feature) {
+        return { color: feature.properties.color };
+      },
+    });
+    this.track.addTo(this.map);
+  }
+
+  componentDidUpdate() {
+    if (this.props.geoJsonVersion === 0) {
+      this.map.fitBounds(this.props.startingBounds);
+    }
+
+    if (this.props.geoJsonVersion !== this.state.geoJsonVersion) {
+      this.track.remove();
+      this.track = L.geoJSON(this.props.geoJson || []);
+      this.track.addTo(this.map);
+      this.state.geoJsonVersio = this.props.geoJsonVersion;
+    }
+  }
+
+  render() {
+    return <div id={'map'} />;
+  }
+}
+
+const tools = [
+  ['Eraser', Eraser, faEraser],
+  ['Move', Move, faArrowsAlt],
+];
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.handleUpload = this.handleUpload.bind(this);
-    this.onCropPressed = this.onCropPressed.bind(this);
     this.downloadGpx = this.downloadGpx.bind(this);
+    this.loadTool = this.loadTool.bind(this);
+    this.onMapLoad = this.onMapLoad.bind(this);
 
     this.state = {
-      geoJson: {
+      toolComponent: Move,
+      geoJsonData: {
         type: 'FeatureCollection',
         features: [],
       },
+      geoJsonDataVersion: 0,
       startingBounds: [
         [49, -123.310547],
         [50, -120.673828],
@@ -84,61 +142,72 @@ class App extends React.Component {
       [minLat, minLng],
     ];
     this.setState({
-      geoJson: splitIntoLines(geoJson),
+      geoJsonData: splitIntoLines(geoJson),
+      geoJsonDataVersion: 0,
       startingBounds: bounds,
     });
   }
 
-  onCropPressed(cropLines) {
-    let isDeleting = false;
-    const newGeoJson = geoutil.deletePointsWhere(
-      this.state.geoJson,
-      (context, coord) => {
-        if (!context.previous) {
-          return isDeleting; // todo is this the correct behaviour?
-        }
-
-        const currentSegment = turf.lineString(
-          [context.previous.coord, coord].map((ll) => ll.slice(0, 2))
-        );
-        const intersections = cropLines.filter((line) => {
-          const cropLineString = turf.lineString(
-            line.map((ll) => [ll.lng, ll.lat])
-          );
-          return (
-            turf.lineIntersect(cropLineString, currentSegment).features.length >
-            0
-          );
-        });
-
-        if (intersections.length) {
-          isDeleting = !_.last(intersections).isCropLineEnd;
-        }
-        return isDeleting;
-      }
-    );
-    this.setState({ geoJson: newGeoJson });
-  }
-
-  onCropLinesChange(cropLines) {
-    this.setState({ cropLines });
-  }
-
   downloadGpx() {
-    const gpx = togpx(geoutil.concatFeatures(this.state.geoJson));
+    const gpx = togpx(geoutil.concatFeatures(this.state.geoJsonData));
     const blob = new Blob([gpx], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, 'trimmed.gpx');
   }
 
+  loadTool(toolComponent) {
+    this.setState({
+      toolComponent: toolComponent,
+    });
+  }
+
+  onMapLoad(map) {
+    this.setState({
+      map: map,
+    });
+  }
+
+  onTrackChange(geoJson) {
+    console.log('new geo json!!');
+    this.setState({
+      geoJsonData: geoJson,
+      geoJsonDataVersion: Math.random(),
+    });
+  }
+
   render() {
+    const ToolComponent = this.state.toolComponent;
     return (
       <div>
-        <FileUpload onDataLoad={this.handleUpload} /> |{' '}
-        <a onClick={this.downloadGpx}>Download GPX</a>
-        <EditableGeoMap
-          geoJson={this.state.geoJson}
-          onCropPressed={this.onCropPressed}
-          bounds={this.state.startingBounds}
+        <Navbar>
+          <FileUpload onDataLoad={this.handleUpload} />
+          <a onClick={this.downloadGpx}>
+            <FontAwesomeIcon icon={faSave} />
+          </a>
+        </Navbar>
+        <ul>
+          {tools.map(([toolName, toolComponent, icon]) => {
+            return (
+              <li key={toolName}>
+                <FontAwesomeIcon
+                  icon={icon}
+                  onClick={() => this.loadTool(toolComponent)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+
+        <ToolComponent
+          geoJson={this.state.geoJsonData}
+          map={this.state.map}
+          onUpdateMap={this.onTrackChange.bind(this)}
+        />
+
+        <Map
+          onMapLoad={this.onMapLoad}
+          geoJson={this.state.geoJsonData}
+          geoJsonVersion={this.state.geoJsonDataVersion}
+          startingBounds={this.state.startingBounds}
         />
       </div>
     );

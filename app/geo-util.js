@@ -1,4 +1,5 @@
 import clone from 'clone';
+import _ from 'lodash';
 
 function toPoints(geoObj) {
   return _.flatMap(geoObj.features, (feature) => {

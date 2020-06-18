@@ -1,5 +1,5 @@
 {
-  "name": "StravaTools",
+  "name": "strava-tools",
   "version": "1.0.0",
   "main": "app/app.jsx",
   "author": "Yacoby (yacoby@JacobEssex.com)",
@@ -10,6 +10,9 @@
     "heroku-postbuild": "webpack -p"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.28",
+    "@fortawesome/free-solid-svg-icons": "^5.13.0",
+    "@fortawesome/react-fontawesome": "^0.1.11",
     "@turf/turf": "^5.1.6",
     "bootstrap": "^4.5.0",
     "clone": "^2.1.2",
@@ -24,9 +27,9 @@
     "path": "^0.12.7",
     "prop-types": "^15.7.2",
     "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
     "react-file-reader-input": "^2.0.0",
-    "react-leaflet": "^2.7.0",
     "style-loader": "^1.2.1",
     "togeojson": "^0.16.0",
     "togpx": "^0.5.4",
@@ -49,6 +52,6 @@
     }
   },
   "lint-staged": {
-    "*.{js,css,md}": "prettier --write"
+    "*.{js,css,md,jsx}": "prettier --write"
   }
 }
