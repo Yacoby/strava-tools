@@ -1,7 +1,13 @@
 import React from 'react';
 import geoutil from '../geo-util';
+import { Input, Menu } from 'semantic-ui-react';
+
+import { Slider } from 'react-semantic-ui-range';
+import 'semantic-ui-css/semantic.min.css';
 
 class Eraser extends React.Component {
+  maxBrushSize = 100;
+
   constructor(props) {
     super(props);
 
@@ -14,8 +20,8 @@ class Eraser extends React.Component {
 
     this.isMouseDown = false;
 
-    this.increaseBrushSize = this.increaseBrushSize.bind(this);
-    this.decreaseBrushSize = this.decreaseBrushSize.bind(this);
+    this.setBrushSize = this.setBrushSize.bind(this);
+    this.handleBrushSizeInput = this.handleBrushSizeInput.bind(this);
 
     this.brush = L.circle([0, 0], {
       radius: this.state.brushSize * this.props.map.getZoom(),
@@ -29,18 +35,6 @@ class Eraser extends React.Component {
       mouseup: this.onMouseUp.bind(this),
     };
     this.props.map.on(this.registeredListeners);
-  }
-
-  increaseBrushSize() {
-    this.setState({
-      brushSize: this.state.brushSize + 20,
-    });
-  }
-
-  decreaseBrushSize() {
-    this.setState({
-      brushSize: this.state.brushSize - 20,
-    });
   }
 
   onMouseMove(e) {
@@ -76,13 +70,47 @@ class Eraser extends React.Component {
     this.props.onUpdateMap(this.geoJson);
   }
 
+  setBrushSize(size) {
+    this.setState({
+      brushSize: size,
+    });
+  }
+
+  handleBrushSizeInput(e) {
+    let value = parseInt(e.target.value);
+    if (!value) {
+      value = 0;
+    }
+    value = Math.min(Math.max(value, 0), this.maxBrushSize);
+    this.setBrushSize(value);
+  }
+
   render() {
     this.brush.setRadius(this.state.brushSize * this.props.map.getZoom());
     return (
-      <div>
-        <a onClick={this.increaseBrushSize}>Bigger</a>,{' '}
-        <a onClick={this.decreaseBrushSize}>Smaller</a>{' '}
-      </div>
+      <Menu vertical>
+        <Menu.Item>
+          Brush Size
+          <Input
+            onChange={this.handleBrushSizeInput}
+            type='number'
+            value={this.state.brushSize}
+          />
+          <Slider
+            value={this.state.brushSize}
+            color='red'
+            settings={{
+              start: this.state.brushSize,
+              min: 0,
+              max: this.maxBrushSize,
+              step: 1,
+              onChange: (value) => {
+                this.setBrushSize(value);
+              },
+            }}
+          />
+        </Menu.Item>
+      </Menu>
     );
   }
 

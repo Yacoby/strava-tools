@@ -10,7 +10,6 @@ import toGeoJson from 'togeojson';
 import togpx from 'togpx';
 
 import './index.html';
-import 'bootstrap/dist/css/bootstrap.css';
 import { Eraser } from './tools/eraser';
 import { Move } from './tools/move';
 import {
@@ -21,9 +20,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import 'semantic-ui-css/semantic.min.css';
+import { Menu, Grid } from 'semantic-ui-react';
+
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Navbar } from 'react-bootstrap';
 
 class FileUpload extends React.Component {
   constructor(props) {
@@ -64,7 +65,7 @@ class Map extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      geoJsonVersio: Math.random(),
+      geoJsonVersion: Math.random(),
     };
     this.onMapLoad = props.onMapLoad;
   }
@@ -99,13 +100,13 @@ class Map extends React.Component {
   }
 
   render() {
-    return <div id={'map'} />;
+    return <div id={'map'} style={{ width: '100%' }} />;
   }
 }
 
 const tools = [
-  ['Eraser', Eraser, faEraser],
   ['Move', Move, faArrowsAlt],
+  ['Eraser', Eraser, faEraser],
 ];
 
 class App extends React.Component {
@@ -178,37 +179,49 @@ class App extends React.Component {
     const ToolComponent = this.state.toolComponent;
     return (
       <div>
-        <Navbar>
-          <FileUpload onDataLoad={this.handleUpload} />
-          <a onClick={this.downloadGpx}>
+        <Menu>
+          <Menu.Item header>Strava Ride Cropper</Menu.Item>
+          <Menu.Item>
+            <FileUpload onDataLoad={this.handleUpload} />
+          </Menu.Item>
+          <Menu.Item onClick={this.downloadGpx}>
             <FontAwesomeIcon icon={faSave} />
-          </a>
-        </Navbar>
-        <ul>
-          {tools.map(([toolName, toolComponent, icon]) => {
-            return (
-              <li key={toolName}>
-                <FontAwesomeIcon
-                  icon={icon}
-                  onClick={() => this.loadTool(toolComponent)}
-                />
-              </li>
-            );
-          })}
-        </ul>
+          </Menu.Item>
+        </Menu>
 
-        <ToolComponent
-          geoJson={this.state.geoJsonData}
-          map={this.state.map}
-          onUpdateMap={this.onTrackChange.bind(this)}
-        />
+        <Grid>
+          <Grid.Column width={2}>
+            <Menu vertical>
+              {tools.map(([toolName, toolComponent, icon]) => {
+                const isActive = this.state.toolComponent === toolComponent;
 
-        <Map
-          onMapLoad={this.onMapLoad}
-          geoJson={this.state.geoJsonData}
-          geoJsonVersion={this.state.geoJsonDataVersion}
-          startingBounds={this.state.startingBounds}
-        />
+                return (
+                  <Menu.Item
+                    onClick={() => this.loadTool(toolComponent)}
+                    active={isActive}
+                  >
+                    {toolName}
+                  </Menu.Item>
+                );
+              })}
+            </Menu>
+
+            <ToolComponent
+              geoJson={this.state.geoJsonData}
+              map={this.state.map}
+              onUpdateMap={this.onTrackChange.bind(this)}
+            />
+          </Grid.Column>
+
+          <Grid.Column width={13} floated='right'>
+            <Map
+              onMapLoad={this.onMapLoad}
+              geoJson={this.state.geoJsonData}
+              geoJsonVersion={this.state.geoJsonDataVersion}
+              startingBounds={this.state.startingBounds}
+            />
+          </Grid.Column>
+        </Grid>
       </div>
     );
   }
