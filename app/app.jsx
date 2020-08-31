@@ -46,7 +46,7 @@ class FileUpload extends React.Component {
   render() {
     return (
       <FileReaderInput as='text' onChange={this.handleChange}>
-        <FontAwesomeIcon icon={faFolderOpen} />
+        {this.props.children}
       </FileReaderInput>
     );
   }
@@ -181,9 +181,12 @@ class App extends React.Component {
       <div>
         <Menu>
           <Menu.Item header>Strava Ride Cropper</Menu.Item>
-          <Menu.Item>
-            <FileUpload onDataLoad={this.handleUpload} />
-          </Menu.Item>
+          <FileUpload onDataLoad={this.handleUpload}>
+            <Menu.Item>
+              <FontAwesomeIcon icon={faFolderOpen} />
+            </Menu.Item>
+          </FileUpload>
+
           <Menu.Item onClick={this.downloadGpx}>
             <FontAwesomeIcon icon={faSave} />
           </Menu.Item>
