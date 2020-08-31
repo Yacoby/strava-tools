@@ -1,6 +1,6 @@
 import React from 'react';
 import geoutil from '../geo-util';
-import { Input, Menu } from 'semantic-ui-react';
+import { Divider, Input, Menu } from 'semantic-ui-react';
 
 import { Slider } from 'react-semantic-ui-range';
 import 'semantic-ui-css/semantic.min.css';
@@ -19,6 +19,9 @@ class Eraser extends React.Component {
     this.geoJson = props.geoJson;
 
     this.isMouseDown = false;
+    this.isAltPressed = false;
+
+    this.props.map.dragging.disable();
 
     this.setBrushSize = this.setBrushSize.bind(this);
     this.handleBrushSizeInput = this.handleBrushSizeInput.bind(this);
@@ -27,12 +30,12 @@ class Eraser extends React.Component {
       radius: this.state.brushSize * this.props.map.getZoom(),
     }).addTo(this.props.map);
 
-    this.props.map.dragging.disable();
-
     this.registeredListeners = {
       mousemove: this.onMouseMove.bind(this),
       mousedown: this.onMouseDown.bind(this),
       mouseup: this.onMouseUp.bind(this),
+      keydown: this.onKeyDown.bind(this),
+      keyup: this.onKeyUp.bind(this),
     };
     this.props.map.on(this.registeredListeners);
   }
@@ -53,7 +56,26 @@ class Eraser extends React.Component {
     this.isMouseDown = false;
   }
 
+  onKeyUp(e) {
+    if (!e.originalEvent.altKey) {
+      this.isAltPressed = false;
+      this.props.map.dragging.disable();
+      this.brush.addTo(this.props.map);
+    }
+  }
+
+  onKeyDown(e) {
+    if (e.originalEvent.altKey) {
+      this.brush.removeFrom(this.props.map);
+      this.props.map.dragging.enable();
+      this.isAltPressed = true;
+    }
+  }
+
   erase(e) {
+    if (this.isAltPressed) {
+      return;
+    }
     if (this.lastUpdateTime > new Date().getTime() - 25) {
       return;
     }
@@ -109,6 +131,8 @@ class Eraser extends React.Component {
               },
             }}
           />
+          <Divider />
+          Hold Alt to enable panning
         </Menu.Item>
       </Menu>
     );

@@ -200,6 +200,7 @@ class App extends React.Component {
 
                 return (
                   <Menu.Item
+                    key={toolName}
                     onClick={() => this.loadTool(toolComponent)}
                     active={isActive}
                   >
